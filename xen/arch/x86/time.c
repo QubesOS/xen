@@ -1647,6 +1647,9 @@ static int __init cf_check parse_wallclock(const char *arg)
 }
 custom_param("wallclock", parse_wallclock);
 
+/* EFI's GetTime() is frequently broken so don't use it by default. */
+#undef USE_EFI_GET_TIME
+
 static void __init probe_wallclock(void)
 {
     ASSERT(wallclock_source == WALLCLOCK_UNSET);
@@ -1665,11 +1668,13 @@ static void __init probe_wallclock(void)
 
         return;
     }
+#ifdef USE_EFI_GET_TIME
     if ( efi_enabled(EFI_RS) && efi_get_time() )
     {
         wallclock_source = WALLCLOCK_EFI;
         return;
     }
+#endif
 
     panic("No usable wallclock found, probed:%s%s%s\n%s",
           !opt_cmos_rtc_probe && !efi_enabled(EFI_RS) ? " None" : "",
