@@ -272,6 +272,20 @@ static bool is_stable_domctl(uint32_t cmd)
     return cmd == XEN_DOMCTL_get_domain_state;
 }
 
+static inline int is_free_domid(domid_t dom)
+{
+    struct domain *d;
+
+    if ( dom >= DOMID_FIRST_RESERVED )
+        return 0;
+
+    if ( (d = rcu_lock_domain_by_id(dom)) == NULL )
+        return 1;
+
+    rcu_unlock_domain(d);
+    return 0;
+}
+
 long do_domctl(XEN_GUEST_HANDLE_PARAM(xen_domctl_t) u_domctl)
 {
     long ret = 0;
@@ -409,14 +423,23 @@ long do_domctl(XEN_GUEST_HANDLE_PARAM(xen_domctl_t) u_domctl)
 
     case XEN_DOMCTL_createdomain:
     {
-        /* NB: ID#0 is reserved, find the first suitable ID instead. */
-        domid_t domid = domid_alloc(op->domain ?: DOMID_INVALID);
+        domid_t domid;
+        static domid_t rover = 1;
 
-        if ( domid == DOMID_INVALID )
-        {
-            ret = -EEXIST;
-            break;
+        /* Refuse explicit domid via op->domain */
+        if ( (op->domain > 0) && (op->domain < DOMID_FIRST_RESERVED) )
+            return -EINVAL;
+
+        if ( rover >= DOMID_FIRST_RESERVED ) {
+            printk(XENLOG_ERR
+                   "domctl: out of available domid values, reboot the system\n");
+            return -ENOMEM;
         }
+
+        domid = rover++;
+        if ( ! is_free_domid(domid) )
+            return -EEXIST;
+
 
         d = domain_create(domid, &op->u.createdomain, false);
         if ( IS_ERR(d) )
