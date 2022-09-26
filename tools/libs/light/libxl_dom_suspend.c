@@ -314,9 +314,11 @@ static void domain_suspend_common_pvcontrol_suspending(libxl__egc *egc,
     STATE_AO_GC(dsps->ao);
     xs_transaction_t t = 0;
 
-    if (!rc && !domain_suspend_pvcontrol_acked(state))
+    if (!rc && !domain_suspend_pvcontrol_acked(state)) {
         /* keep waiting */
+        LOGD(DEBUG, dsps->domid, "PV control callback without ack");
         return;
+    }
 
     libxl__xswait_stop(gc, &dsps->pvcontrol);
 
@@ -398,7 +400,10 @@ static void domain_suspend_common_wait_guest(libxl__egc *egc,
 static void suspend_common_wait_guest_watch(libxl__egc *egc,
       libxl__ev_xswatch *xsw, const char *watch_path, const char *event_path)
 {
+    EGC_GC;
     libxl__domain_suspend_state *dsps = CONTAINER_OF(xsw, *dsps, guest_watch);
+
+    LOGD(DEBUG, dsps->domid, "@releaseDomain watch fired, checking guest status");
     suspend_common_wait_guest_check(egc, dsps);
 }
 
@@ -419,9 +424,11 @@ static bool suspend_common_wait_guest_check(libxl__egc *egc,
         goto err;
     }
 
-    if (!(info.flags & XEN_DOMINF_shutdown))
+    if (!(info.flags & XEN_DOMINF_shutdown)) {
+        LOGD(DEBUG, domid, "guest we were suspending has not shut down yet");
         /* keep waiting */
         return false;
+    }
 
     shutdown_reason = (info.flags >> XEN_DOMINF_shutdownshift)
         & XEN_DOMINF_shutdownmask;
@@ -448,11 +455,14 @@ static void suspend_common_wait_guest_timeout(libxl__egc *egc,
 {
     libxl__domain_suspend_state *dsps = CONTAINER_OF(ev, *dsps, guest_timeout);
     STATE_AO_GC(dsps->ao);
+    LOGD(DEBUG, dsps->domid, "Timeout callback triggered");
     if (suspend_common_wait_guest_check(egc, dsps))
         return;
     if (rc == ERROR_TIMEDOUT) {
         LOGD(ERROR, dsps->domid, "guest did not suspend, timed out");
         rc = ERROR_GUEST_TIMEDOUT;
+    } else {
+        LOGD(ERROR, dsps->domid, "error in timeout handler (code %d)", rc);
     }
     domain_suspend_common_done(egc, dsps, rc);
 }
@@ -591,6 +601,8 @@ void libxl__dm_resume(libxl__egc *egc,
     libxl_domid domid = dmrs->domid;
     libxl__ev_qmp *qmp = &dmrs->qmp;
 
+    LOGD(DEBUG, domid, "Resuming device model");
+
     dm_resume_init(dmrs);
 
     rc = libxl__ev_time_register_rel(dmrs->ao,
@@ -652,6 +664,7 @@ void libxl__dm_resume(libxl__egc *egc,
         goto out;
     }
     default:
+        LOGD(ERROR, domid, "Invalid device model type, cannot resume");
         rc = ERROR_INVAL;
         goto out;
     }
@@ -706,6 +719,8 @@ void libxl__domain_resume(libxl__egc *egc,
     STATE_AO_GC(dmrs->ao);
     int rc = 0;
     libxl_domain_type type = libxl__domain_type(gc, dmrs->domid);
+
+    LOGD(DEBUG, dmrs->domid, "Resuming domain");
 
     if (type == LIBXL_DOMAIN_TYPE_INVALID) {
         rc = ERROR_FAIL;
