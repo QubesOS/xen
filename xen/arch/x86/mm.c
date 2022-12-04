@@ -6544,14 +6544,6 @@ unsigned long get_upper_mfn_bound(void)
  */
 static void __init __maybe_unused build_assertions(void)
 {
-    /*
-     * If this trips, any guests that blindly rely on the public API in xen.h
-     * (instead of reading the PAT from Xen, as Linux 3.19+ does) will be
-     * broken.  Furthermore, live migration of PV guests between Xen versions
-     * using different PATs will not work.
-     */
-    BUILD_BUG_ON(XEN_MSR_PAT != 0x050100070406ULL);
-
     /* IST_MAX IST pages + at least 1 guard page + primary stack. */
     BUILD_BUG_ON((IST_MAX + 1) * PAGE_SIZE + PRIMARY_STACK_SIZE > STACK_SIZE);
 
