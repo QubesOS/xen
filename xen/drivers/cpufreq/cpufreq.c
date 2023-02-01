@@ -65,7 +65,7 @@ LIST_HEAD_READ_MOSTLY(cpufreq_governor_list);
 /* set xen as default cpufreq */
 enum cpufreq_controller cpufreq_controller = FREQCTL_xen;
 
-enum cpufreq_xen_opt __initdata cpufreq_xen_opts[3] = { [0] = CPUFREQ_xen };
+enum cpufreq_xen_opt __initdata cpufreq_xen_opts[3] = { [0] = CPUFREQ_hwp, [1] = CPUFREQ_xen };
 unsigned int __initdata cpufreq_xen_cnt = 1;
 
 static int __init cpufreq_cmdline_parse(const char *s, const char *e);
