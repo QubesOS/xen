@@ -176,13 +176,6 @@ SECTIONS
 #endif
 #endif
 
-#ifndef EFI
-  /* Retain these just for the purpose of possible analysis tools. */
-  DECL_SECTION(.note) {
-       *(.note.*)
-  } PHDR(note) PHDR(text)
-#endif
-
   LLVM_COV_RO_DATA
 
   _erodata = .;
