@@ -2417,7 +2417,8 @@ int libxl__grant_vga_iomem_permission(libxl__gc *gc, const uint32_t domid,
 
         if (sysfs_dev_get_class(gc, pci, &pci_device_class))
             continue;
-        if (pci_device_class != 0x030000) /* VGA class */
+        if (pci_device_class != 0x030000 && /* VGA class */
+                pci_device_class != 0x038000) /* Display class */
             continue;
 
         stubdom_domid = libxl_get_stubdom_id(CTX, domid);
