@@ -16,9 +16,9 @@ extern void (*lapic_timer_on)(void);
 extern uint64_t (*cpuidle_get_tick)(void);
 
 #ifdef CONFIG_INTEL
-int mwait_idle_init(struct notifier_block *nfb);
+int mwait_idle_init(struct notifier_block *nfb, bool);
 #else
-static inline int mwait_idle_init(struct notifier_block *nfb)
+static inline int mwait_idle_init(struct notifier_block *nfb, bool)
 {
     return -ENODEV;
 }
