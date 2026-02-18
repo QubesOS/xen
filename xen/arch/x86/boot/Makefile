@@ -41,8 +41,8 @@ LD32 := $(LD) $(subst x86_64,i386,$(LDFLAGS_DIRECT))
 # are affected by both text_diff and text_gap.  Ensure the sum of gap and diff
 # is greater than 2^16 so that any 16bit relocations if present in the object
 # file turns into a build-time error.
-text_gap := 0x010200
-text_diff := 0x408020
+text_gap := 0x010240
+text_diff := 0x608040
 
 $(obj)/build32.base.lds: AFLAGS-y += -DGAP=$(text_gap) -DTEXT_DIFF=$(text_diff)
 $(obj)/build32.offset.lds: AFLAGS-y += -DGAP=$(text_gap) -DTEXT_DIFF=$(text_diff) -DAPPLY_OFFSET
