@@ -93,7 +93,7 @@ if size1 > size2:
     file1, file2 = file2, file1
     size1, size2 = size2, size1
 if size2 != size1 + gap:
-    raise Exception('File sizes do not match')
+    raise Exception(f"File sizes do not match s2 {size2} s1 {size1} + gap {gap} in {args.bin1} {args.bin2}")
 del size2
 
 file1.seek(0, 0)
