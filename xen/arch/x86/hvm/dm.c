@@ -11,6 +11,7 @@
 #include <xen/nospec.h>
 #include <xen/sched.h>
 
+#include <asm/current.h>
 #include <asm/hap.h>
 #include <asm/hvm/cacheattr.h>
 #include <asm/shadow.h>
@@ -350,6 +351,7 @@ int dm_op(const struct dmop_args *op_args)
         [XEN_DMOP_relocate_memory]                  = sizeof(struct xen_dm_op_relocate_memory),
         [XEN_DMOP_pin_memory_cacheattr]             = sizeof(struct xen_dm_op_pin_memory_cacheattr),
         [XEN_DMOP_nr_vcpus]                         = sizeof(struct xen_dm_op_nr_vcpus),
+        [XEN_DMOP_evtchn_send]                      = sizeof(struct xen_dm_op_evtchn_send),
     };
 
     rc = rcu_lock_remote_domain_by_id(op_args->domid, &d);
@@ -617,6 +619,14 @@ int dm_op(const struct dmop_args *op_args)
         break;
     }
 
+    case XEN_DMOP_evtchn_send:
+    {
+        const struct xen_dm_op_evtchn_send *data = &op.u.evtchn_send;
+
+        rc = evtchn_send(current->domain, data->port);
+        break;
+    }
+
     default:
         rc = ioreq_server_dm_op(&op, d, &const_op);
         break;
@@ -653,6 +663,7 @@ CHECK_dm_op_remote_shutdown;
 CHECK_dm_op_relocate_memory;
 CHECK_dm_op_pin_memory_cacheattr;
 CHECK_dm_op_nr_vcpus;
+// CHECK_dm_op_evtchn_send;
 
 int compat_dm_op(
     domid_t domid, unsigned int nr_bufs, XEN_GUEST_HANDLE_PARAM(void) bufs)

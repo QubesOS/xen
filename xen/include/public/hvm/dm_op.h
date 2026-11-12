@@ -444,6 +444,15 @@ struct xen_dm_op_nr_vcpus {
 };
 typedef struct xen_dm_op_nr_vcpus xen_dm_op_nr_vcpus_t;
 
+/*
+ *
+ */
+#define XEN_DMOP_evtchn_send 21
+struct xen_dm_op_evtchn_send {
+    evtchn_port_t port; /* IN */
+};
+typedef struct xen_dm_op_evtchn_send xen_dm_op_evtchn_send_t;
+
 struct xen_dm_op {
     uint32_t op;
     uint32_t pad;
@@ -468,6 +477,7 @@ struct xen_dm_op {
         xen_dm_op_relocate_memory_t relocate_memory;
         xen_dm_op_pin_memory_cacheattr_t pin_memory_cacheattr;
         xen_dm_op_nr_vcpus_t nr_vcpus;
+        xen_dm_op_evtchn_send_t evtchn_send;
     } u;
 };
 
